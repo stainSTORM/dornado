@@ -20,16 +20,22 @@ class DornaController:
         self.ip = ip
         self.robot = Dorna()
         self.paths_dir = Path(__file__).resolve().parent / "paths"
+        self.robot_connected = False
 
     # ---------------------------------------------------------------------
     # connection helpers
     # ---------------------------------------------------------------------
 
     def connect(self):
-        self.robot.connect(self.ip)
-        self.robot.set_alarm(0)  # clear any previous alarm
-        self.set_motor(1)        # enable motors
-
+        try:
+            self.robot.connect(self.ip)
+            self.robot.set_alarm(0)  # clear any previous alarm
+            self.set_motor(1)        # enable motors
+            # set speed
+            #self.robot. #TODO: set speed
+            self.robot_connected = True
+        except Exception as e:
+            self.robot_connected = False
     def disconnect(self):
         self.robot.close()
 
@@ -38,10 +44,10 @@ class DornaController:
     # ---------------------------------------------------------------------
 
     def set_motor(self, state: int):
-        self.robot.set_motor(state)
+        if self.robot_connected: self.robot.set_motor(state)
 
     def halt(self):
-        self.robot.halt()
+        if self.robot_connected: self.robot.halt()
 
     def is_busy(self) -> bool:
         # stat == 2 → idle, everything else → busy (per dorna2 docs)
@@ -52,7 +58,7 @@ class DornaController:
         script_path = self.paths_dir / filename
         if not script_path.exists():
             raise FileNotFoundError(script_path)
-        self.robot.play_script(str(script_path))
+        if self.robot_connected:  self.robot.play_script(str(script_path))
 
     # ---------------------------------------------------------------------
     # high‑level convenience wrappers (1:1 with register functions below)
